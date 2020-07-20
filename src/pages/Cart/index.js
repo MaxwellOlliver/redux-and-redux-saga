@@ -1,6 +1,5 @@
 import React from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   MdRemoveCircleOutline,
   MdAddCircleOutline,
@@ -12,17 +11,28 @@ import { Container, ProductTable, Total } from './styles';
 import * as CartActions from '../../store/modules/cart/actions';
 import { toBRL } from '../../utils/format';
 
-function Cart({ cart, removeFromCart, updateAmountRequest, total }) {
+function Cart() {
+  const dispatch = useDispatch();
+  const total = useSelector((state) =>
+    toBRL(state.cart.reduce((acc, cur) => cur.price * cur.amount + acc, 0))
+  );
+  const cart = useSelector((state) =>
+    state.cart.map((value) => ({
+      ...value,
+      subtotal: toBRL(value.price * value.amount),
+    }))
+  );
+
   function handleRemoveProduct(product) {
-    removeFromCart(product.id);
+    dispatch(CartActions.removeFromCart(product.id));
   }
 
   function increment(product) {
-    updateAmountRequest(product.id, product.amount + 1);
+    dispatch(CartActions.updateAmountRequest(product.id, product.amount + 1));
   }
 
   function decrement(product) {
-    updateAmountRequest(product.id, product.amount - 1);
+    dispatch(CartActions.updateAmountRequest(product.id, product.amount - 1));
   }
 
   return (
@@ -86,17 +96,4 @@ function Cart({ cart, removeFromCart, updateAmountRequest, total }) {
   );
 }
 
-const mapStateToProps = (state) => ({
-  cart: state.cart.map((value) => ({
-    ...value,
-    subtotal: toBRL(value.price * value.amount),
-  })),
-  total: toBRL(
-    state.cart.reduce((acc, cur) => cur.price * cur.amount + acc, 0)
-  ),
-});
-
-const mapDispatchToProps = (dispatch) =>
-  bindActionCreators(CartActions, dispatch);
-
-export default connect(mapStateToProps, mapDispatchToProps)(Cart);
+export default Cart;
